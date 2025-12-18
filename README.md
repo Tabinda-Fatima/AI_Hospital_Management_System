@@ -42,7 +42,7 @@ Built using **n8n**, **AI Agents**, and **LLMs**.
 
 ## ⚙️ Tech Stack
 
-- n8n (v1.42.0+)
+- n8n (Version 2.0.3)
 - AI Agents (LangChain-based)
 - Groq LLM (OpenAI-compatible)
 - Supabase / Vector Store (RAG)
