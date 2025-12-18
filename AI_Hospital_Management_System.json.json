@@ -1,0 +1,2074 @@
+{
+  "name": "Ai Health Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Get incoming JSON from previous node\nconst data = items[0].json;\n\n// Initialize defaults\nlet sessionId = null;\nlet chatInput = null;\n\n// Check if it's a \"messages\" type payload with text\nif (Array.isArray(data.messages) && data.messages.length > 0) {\n    const msg = data.messages[0];\n    sessionId = msg.from || null;\n    chatInput = msg.text?.body || null;\n}\n\n// If no messages, maybe it's a status update - extract recipient_id as sessionId\nif (!sessionId && Array.isArray(data.statuses) && data.statuses.length > 0) {\n    sessionId = data.statuses[0].recipient_id || null;\n    chatInput = null; // No text in statuses\n}\n\n// Output result\nreturn [\n  {\n    json: {\n      sessionId,\n      chatInput\n    }\n  }\n];"
+      },
+      "id": "REPLACE_ME",
+      "name": "PrepareInput",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -22640,
+        -8048
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "REPLACE_ME",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.chatInput }}",
+              "rightValue": "null"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -21728,
+        -8192
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "REPLACE_ME",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.messages[0].image }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "REPLACE_ME",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.messages[0].document }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Document"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "REPLACE_ME",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.messages[0].audio }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Audio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "REPLACE_ME",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.messages[0].text }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -22848,
+        -8416
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].audio.id }}"
+      },
+      "id": "REPLACE_ME",
+      "name": "Get Audio URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -22624,
+        -8288
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Download Audio",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -22400,
+        -8288
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Transcribe Audio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -22176,
+        -8288
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REPLACE_ME",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $('WATrigger').item.json.contacts[0].wa_id }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "mode",
+              "type": "string",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Audio Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -21952,
+        -8288
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Download Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -22176,
+        -8672
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $('WhatsApp Trigger').item.json.messages[0].image.id }}"
+      },
+      "id": "REPLACE_ME",
+      "name": "Get Image URL",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -22400,
+        -8672
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "chatgpt-4o-latest",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "=Please analyze this image and tell me what's in it. If it's a document, summarize the key details. If it's a photo, describe the contents.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Analyze Image",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -21952,
+        -8672
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REPLACE_ME",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $json.sessionId }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "action",
+              "type": "string",
+              "value": "sendMessage"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.chatInput }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "mode",
+              "type": "string",
+              "value": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Text Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -22192,
+        -8048
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $json.output }}",
+        "voice": "fable",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Generate Audio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -19696,
+        -8624
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "REPLACE_ME",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $('If').item.json.mode }}",
+              "rightValue": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "response",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -19920,
+        -8528
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_YOUR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('If').item.json.sessionId }}",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Text Message",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -19696,
+        -8432
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and change the MIME type of binary data\nfor (const item of $input.all()) {\n  // Check if the item has binary data\n  if (item.binary) {\n    // Find the binary property name (assuming there's at least one)\n    const binaryPropertyNames = Object.keys(item.binary);\n\n    for (const propName of binaryPropertyNames) {\n      // If the MIME type is 'audio/mp3', change it to 'audio/mpeg'\n      if (item.binary[propName].mimeType === \"audio/mp3\") {\n        item.binary[propName].mimeType = \"audio/mpeg\";\n      }\n    }\n  }\n}\n\nreturn $input.all();"
+      },
+      "id": "REPLACE_ME",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -19472,
+        -8624
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_YOUR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('If').item.json.sessionId }}",
+        "messageType": "audio",
+        "mediaPath": "useMedian8n",
+        "additionalFields": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Audio Response",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -19248,
+        -8624
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "operation": "mediaUrlGet",
+        "mediaGetId": "={{ $json.messages[0].document.id }}"
+      },
+      "id": "REPLACE_ME",
+      "name": "Get Document",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -22624,
+        -8480
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "whatsAppApi",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Download Document",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -22400,
+        -8480
+      ],
+      "typeVersion": 4.2
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "REPLACE_WITH_YOUR_PHONE_NUMBER_ID",
+        "recipientPhoneNumber": "={{ $('WhatsApp Trigger').item.json.messages[0].from }}",
+        "textBody": "Analyzing image\u2026",
+        "additionalFields": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Analyzing Image Text",
+      "type": "n8n-nodes-base.whatsApp",
+      "position": [
+        -22624,
+        -8672
+      ],
+      "webhookId": "REPLACE_ME",
+      "typeVersion": 1,
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "REPLACE_ME",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.mime_type }}",
+              "rightValue": "application/pdf"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "If PDF File",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -22176,
+        -8480
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Extract from PDF File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        -21952,
+        -8480
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REPLACE_ME",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $('WATrigger').item.json.contacts[0].wa_id }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "mode",
+              "type": "string",
+              "value": "document"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Document Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -21728,
+        -8480
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "REPLACE_ME",
+              "name": "sessionId",
+              "type": "string",
+              "value": "={{ $('WATrigger').item.json.contacts[0].wa_id }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "chatInput",
+              "type": "string",
+              "value": "={{ $json.content }}"
+            },
+            {
+              "id": "REPLACE_ME",
+              "name": "mode",
+              "type": "string",
+              "value": "image"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "REPLACE_ME",
+      "name": "Image Prompt",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -21728,
+        -8672
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        -23072,
+        -8384
+      ],
+      "id": "REPLACE_ME",
+      "name": "WhatsApp Trigger",
+      "webhookId": "REPLACE_ME",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Welcome Message:\n\"Hello! I\u2019m your AI assistant from [Hospital Name]. How can I help you today? \ud83e\udd16\nPlease choose from the following services by replying with the corresponding number:\n\n1\ufe0f\u20e3 Book a Clinical Appointment\n2\ufe0f\u20e3 AI Receptionist\n3\ufe0f\u20e3 Hospital Location Information\n4\ufe0f\u20e3 Home Health Care Services\n5\ufe0f\u20e3 Other Services\n\nFlow Breakdown:\n\nUser Selection Handling:\n\nOption 1: Book a Clinical Appointment\nIf the user selects 1, route the request to the Booking Agent to handle appointment scheduling.\n\nOption 2: AI Receptionist\nIf the user selects 2, route the request to the RAG Agent (FAQs) for hospital details such as timings, policies, and other info.\n\nOption 3: Hospital Location\nIf the user selects 3, provide information about the hospital locations, including any outreach clinics.\n\nOption 4: Home Health Care Services\nIf the user selects 4, show the Home Health Care options and collect the required details (like patient name, phone number, and location).\n\nOption 5: Other Services\nIf the user selects 5, show options for other services and route requests to the corresponding agents.\n\nAgent Behavior:\n\nTone & Style:\nPolite, helpful, and professional. Always keep responses clear, concise, and customer-friendly. Ensure that you remain approachable and empathetic, as would be expected from a medical assistant.\n\nHandling Queries:\nIf the user provides additional details or asks for a representative:\n\nPolitely ask for their name and mobile number to transfer them to a human representative.\n\nExample:\n\n\"To assist you further, please share your name and mobile number. Our representative will get back to you shortly.\"\n\nBack Navigation:\nIf the user types \"\ud83c\udd7f\ufe0f\" or \"P\", send them to the previous menu in the flow.\nIf the user types \"\u24c2\ufe0f\" or \"M\", take them back to the MAIN MENU.\n\nContextual Rules:\n\nNever repeat the same question if the user has already provided the required information.\n\nEnsure proper error handling if the user inputs something unexpected. Guide them to the right flow.\n\nProvide options with concise instructions. Keep interactions simple for WhatsApp-style communication.\n\nEmergency Handling:\n\nIf a user mentions emergency symptoms (e.g., chest pain, breathing problems, severe injury), respond immediately with:\n\n\u201cAgar emergency hai to please nearest ER / local emergency services ko foran call karein.\u201d\n\nThen guide them to the Emergency Department or hand them off to a representative for urgent assistance.\n\nEnd Notes:\n\nEnd each menu with options to return to the previous or main menu:\n\n\u201cPress \ud83c\udd7f\ufe0f for Previous Menu | Press \u24c2\ufe0f for Main Menu.\u201d",
+        "options": {
+          "systemMessage": "You are the central coordinator for a hospital management system, integrated with WhatsApp. Your role is to receive patient requests, categorize them, and forward them to the appropriate sub-agent based on the selected category. Here\u2019s how you should handle each scenario:\n\nIncoming Message Handling:\n\nWhen a patient sends a message, you send them a menu with the following options:\n\n1. Book an Appointment\n\n2. AI Receptionist\n\n3. Hospital Location\n\n4. Home Health Service\n\n5. Other Services\n\nCategory Selection:\n\nBased on the user\u2019s selection, forward the request to the appropriate sub-agent:\n\nIf Option 1 (Book an Appointment) is selected:\n\nSend the request to the Booking Agent to proceed with appointment scheduling.\n\nIf Option 2 (AI Receptionist) is selected:\n\nForward to the RAG Agent to handle queries about medical records, doctors, or other relevant information.\n\nIf Option 3 (Hospital Location) is selected:\n\nDirect the request to the Location Agent, which provides the hospital\u2019s location and directions.\n\nIf Option 4 (Home Health Service) is selected:\n\nTransfer the query to the Home Health Service Agent, where the patient can inquire about home care services.\n\nIf Option 5 (Other Services) is selected:\n\nSend the request to the Other Services Agent, which handles job vacancies, promotions, and other miscellaneous requests.\n\nAgent Behavior:\n\nEach agent must act in a polite, helpful, and professional manner, providing relevant information as requested by the patient.\n\nIf a request is incomplete (e.g., missing patient ID for appointment), the agent should prompt the user for necessary details in a clear and respectful way"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -20912,
+        -8432
+      ],
+      "id": "REPLACE_ME",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -20416,
+        -8784
+      ],
+      "id": "REPLACE_ME",
+      "name": "When chat message received",
+      "webhookId": "REPLACE_ME"
+    },
+    {
+      "parameters": {
+        "content": "\n\nHome Health Care \ud83c\udfe0\ud83e\ude7a\nHome-based care services \n1) Info \u2139\ufe0f\nService overview + purpose\n2) Home Visit \ud83d\ude91\nName \u2022 Mobile \u2022 Address \u2022 Date/Time \u2022 Need\n3) Pharmacy \ud83d\udc8a\nName \u2022 Mobile \u2022 Address \u2022 Medicines/Prescription",
+        "height": 320,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -20416,
+        -7776
+      ],
+      "typeVersion": 1,
+      "id": "REPLACE_ME",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Hospital FAQ Brain \ud83e\udde0\nTimings \u2022 location \u2022 services \u2022 policies \u2022 fees info\nUse for \u201cgeneral hospital info\u201d questions.\n\n\n",
+        "height": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -21232,
+        -7760
+      ],
+      "typeVersion": 1,
+      "id": "REPLACE_ME",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Book/Reschedule/Cancel \ud83d\udcc5\nHandles slots + confirmations + changes\nCollects only needed details, then books.",
+        "height": 336,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -19792,
+        -8080
+      ],
+      "typeVersion": 1,
+      "id": "REPLACE_ME",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=={{ $json.sessionId || $json.chatId || $json.conversationId || $execution.id }}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -20800,
+        -8752
+      ],
+      "id": "REPLACE_ME",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "description": "=Call this tool for any Appointment and Patient Regestration",
+        "workflowId": {
+          "__rl": true,
+          "value": "QJb2R2MP444Xglzs",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/QJb2R2MP444Xglzs",
+          "cachedResultName": "Appointment Booking Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -20352,
+        -7920
+      ],
+      "id": "REPLACE_ME",
+      "name": "Call 'Appointment Agent'"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool for Home Health Care Service requests.\n\nThis tool handles:\n1) Information: what the service is and why it exists (home-based affordable quality medical care)\n2) Home Health Care Visit Service (booking/request)\n3) HHC Pharmacy Service (medicine delivery/request)\n\nBehavior:\n- First show 3 options (1\u20133)\n- Based on selection, provide info or collect minimum details and proceed\n- Keep replies short, polite, WhatsApp-friendly\n- Do not give medical advice or diagnosis\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "pUXDiSf883Ofjckm",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/pUXDiSf883Ofjckm",
+          "cachedResultName": "HomeHealthCareService"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -19728,
+        -8208
+      ],
+      "id": "REPLACE_ME",
+      "name": "Call 'HomeHealthCareService'"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -20928,
+        -8752
+      ],
+      "id": "REPLACE_ME",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "path": "51ae99df-7cb4-4d72-b1a8-f68364eb9577",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -23184,
+        -8672
+      ],
+      "id": "REPLACE_ME",
+      "name": "Webhook",
+      "webhookId": "REPLACE_ME"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.query['hub.verify_token'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -22960,
+        -8672
+      ],
+      "id": "REPLACE_ME",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to answer hospital-specific questions using the hospital knowledge base (FAQs, policies, departments, services, timings, location, pricing ranges, process steps).\n\nCall this tool when the user asks:\n- hospital hours, address, directions, parking, contact info\n- departments/services/tests available\n- OPD/IPD process, registration steps, documents required\n- fees, package info, insurance acceptance (if present in KB)\n- \u201cwhat is the process?\u201d type questions\n\nDo NOT use for:\n- booking/rescheduling/canceling appointments (use Appointment Agent)\n- clinical diagnosis or treatment advice\n- personalized medical decisions\n\nInput:\n- Send the user\u2019s latest question as-is.\n\nOutput:\n- Use the retrieved answer; if missing, ask the user for specifics or offer to connect them to front desk.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "gmubuuttpkXIFLYl",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/gmubuuttpkXIFLYl",
+          "cachedResultName": "Receptionist Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -21168,
+        -7888
+      ],
+      "id": "REPLACE_ME",
+      "name": "Call 'Receptionist Agent'"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "135zLJ9zowIrHJOBohQzId6JLWCBQklPB",
+          "mode": "list",
+          "cachedResultName": "Document from Be Positive.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/135zLJ9zowIrHJOBohQzId6JLWCBQklPB/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -21120,
+        -6864
+      ],
+      "id": "REPLACE_ME",
+      "name": "Download file",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -21456,
+        -7056
+      ],
+      "id": "REPLACE_ME",
+      "name": "Supabase Vector Store",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        -20880,
+        -6816
+      ],
+      "id": "REPLACE_ME",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Retrieve answer for query from chat input.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "list",
+          "cachedResultName": "documents"
+        },
+        "topK": 2,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        -21072,
+        -7248
+      ],
+      "id": "REPLACE_ME",
+      "name": "Supabase Vector Store1",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "hour": 12
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1OGrQR9MN3J0LMVSwby-QWft4CrVil2ud",
+          "mode": "list",
+          "cachedResultName": "Hospital All data Documnts",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1OGrQR9MN3J0LMVSwby-QWft4CrVil2ud"
+        },
+        "event": "watchFolderUpdated"
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -21392,
+        -6864
+      ],
+      "id": "REPLACE_ME",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -20992,
+        -7040
+      ],
+      "id": "REPLACE_ME",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "\"Hello! I\u2019m your AI Receptionist at [Hospital Name]. How can I assist you today? \ud83d\ude0a\nPlease select what you'd like to know from the options below:\n\n1\ufe0f\u20e3 Hospital Information (Location, Timings, Policies, etc.)\n2\ufe0f\u20e3 Doctor Information (Specialties, Availability, Consultation Timings)\n3\ufe0f\u20e3 Fee Information (Consultation Fees, Test Charges, etc.)\n4\ufe0f\u20e3 Emergency Services (Contact Info, Procedures, etc.)\n5\ufe0f\u20e3 Other Services (Rehabilitation, Home Health, Pharmacy, etc.)\n6\ufe0f\u20e3 Job Opportunities (Current Vacancies)\n\nHandling Specific Queries:\n\nIf the user selects Option 1 (Hospital Information):\n\nAgent Response:\n\"Here\u2019s some useful information about [Hospital Name]:\n\ud83d\udccd Location: 123 Health Ave, City\n\ud83d\udd52 OPD Hours: Mon\u2013Fri: 8:00 AM \u2013 5:00 PM, Sat: 9:00 AM \u2013 1:00 PM\n\ud83d\ude91 Emergency Services: Available 24/7\n\ud83d\udd17 Policies: [Hospital Policies Link]\n\nLet me know if you'd like to know more or explore other options. \ud83d\ude0a\n\nPress \ud83c\udd7f\ufe0f for Previous Menu | Press \u24c2\ufe0f for Main Menu.\"\n\nClarifications:\n\nIf the user asks for something specific, e.g., \"doctor availability\" or \"fees\", the agent can respond politely by guiding them to the right option:\n\nAgent:\n\"Can you please specify the department or service you need information about? \ud83d\ude0a\nFor example, 'Cardiology', 'Dermatology', or 'Dr. John Smith'.\"\n\nIf the user is vague or doesn\u2019t specify:\nAgent:\n\"Please let me know what information you\u2019re looking for by selecting an option from the list above! \ud83d\ude0a\"\n\nEnd Notes:\n\nKeep the responses short and neat to fit WhatsApp's dark theme.\n\nAlways give the user the option to go back to the main menu or the previous menu for easy navigation.\n\nProvide links (e.g., for hospital policies) as the user requests.\n\nMaintain a polite, helpful, and professional tone throughout the interaction.\n{{ $json.chatInput }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -21232,
+        -7472
+      ],
+      "id": "REPLACE_ME",
+      "name": "Receptionist Agnet (RAG)"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -21328,
+        -7248
+      ],
+      "id": "REPLACE_ME",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -21200,
+        -7248
+      ],
+      "id": "REPLACE_ME",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sheet', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -20496,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "registration sheet",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Document', ``, 'string') }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -20640,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "Create sheet in Google Sheets",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -20048,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "Create an Appointment",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -19872,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "Check The Appointment Slot",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -19632,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "Cancel the Appointmnet",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&\u2019*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -19392,
+        -6976
+      ],
+      "id": "REPLACE_ME",
+      "name": "Delete an event in Google Calendar",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an efficient, polite, and precise AI Patient Management Assistant for a hospital/clinic. Your goal is to manage patient lookup and registration with zero friction.\nTone: Professional, short, and clear.\nOperating Rule: ONE step at a time. Never bunch questions together. Always wait for the user's response.\nWorkflow & Logic\nPHASE 1: GREETING & TRIAGE\nStart: Greet the user and ask: \"Are you already registered with us?\"\nIf User says YES:\nAsk: \"Please provide your Medical Record Number (MRN).\"\nAction: When MRN is received, call tool Registration sheet.\nOutcome A (Row Found): \"Welcome back. You are registered. Here are your details: [Display Details].\"\nOutcome B (Row NOT Found/Null): \"I cannot find that MRN in our records. You are not registered. Kindly register yourself now.\" -> Proceed immediately to PHASE 2.\nIf User says NO:\nProceed immediately to PHASE 2.\nPHASE 2: NEW PATIENT REGISTRATION\nYou must collect the following details. Ask for them strictly one by one. Do not validate inputs; accept what the user provides.\nStep 1: Ask: \"Please enter your Full Name.\"\nWait for input.\nStep 2: Ask: \"Please enter your Contact Number.\"\nWait for input.\nStep 3: Ask: \"Please enter your Address.\"\nWait for input.\nPHASE 3: FINALIZATION\nAction: Once (and only once) Name, Contact, and Address are collected, call tool Client registration with the gathered variables.\nCompletion: Confirm to the user: \"Registration complete. Your details have been saved.\"\nConstraints & Rules\nStrict Sequencing: Never ask for Name, Number, and Address in the same message.\nTool Precision: Use Registration sheet for lookups and Client registration for saving new data.\nError Handling: If an MRN is invalid, treat the user as a new patient immediately.\nBrevity: Do not add fluff. Keep messages under 2 sentences where possible.\n\nCustomer chat input: {{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "="
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -20384,
+        -7088
+      ],
+      "id": "REPLACE_ME",
+      "name": "Appointment Booking Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.chatInput }}",
+        "contextWindowLength": 100
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -20256,
+        -7408
+      ],
+      "id": "REPLACE_ME",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -20384,
+        -7408
+      ],
+      "id": "REPLACE_ME",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are \u201cHome Health Care Service Assistant\u201d for our hospital. Your role is to guide users through the Home Health Care service process.\n\nService statement:\n\u201cOur Home Health Care service provides high quality, affordable medical services within the comfort of your home.\u201d\n\nFLOW:\nStep 1: When the user messages requesting Home Health Care, show the following:\n\u201cPlease provide your details so we can proceed with your Home Health Care request:\n1) Your Full Name\n2) Your Contact Number\n3) Your Address/Area\n4) A brief description about the patient\n\nOnce we have these details, our team will contact you soon for further steps.\u201d\n\nStep 2: Handle the data collection:\n- After the user submits the requested information, save the details (Name, Phone Number, Address, and brief patient info) to the Google Sheet.\n- Respond with:  \n  \u201cThank you! Your request has been received. Our team will get in touch with you shortly.\u201d\n\nEnd with:  \n\u201cPress \ud83c\udd7f\ufe0f for Previous Menu | Press \u24c2\ufe0f for Main Men\n\nCustomer chat input: {{ $json.chatInput }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -19792,
+        -7920
+      ],
+      "id": "REPLACE_ME",
+      "name": "HomeHealthCare"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FLtO9saYSnKQthkcV66ogXdzpFO2gLFmETcE81N9GNU",
+          "mode": "list",
+          "cachedResultName": "Home health Care Queries",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FLtO9saYSnKQthkcV66ogXdzpFO2gLFmETcE81N9GNU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1FLtO9saYSnKQthkcV66ogXdzpFO2gLFmETcE81N9GNU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "Sr Number": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Sr_Number', ``, 'string') }}",
+            "Name": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Name', ``, 'string') }}",
+            "Phone Number": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Phone_Number', ``, 'string') }}",
+            "Address": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Address', ``, 'string') }}",
+            "Short Discreption": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Short_Discreption', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "REPLACE_ME",
+              "displayName": "Sr Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "REPLACE_ME",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "REPLACE_ME",
+              "displayName": "Phone Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "REPLACE_ME",
+              "displayName": "Address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "REPLACE_ME",
+              "displayName": "Short Discreption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        -19568,
+        -7552
+      ],
+      "id": "REPLACE_ME",
+      "name": "HHC Info",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.phone || $json.patient_id || $json.doctor_id || $json.chatId || 'doctor-session' }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -19696,
+        -7664
+      ],
+      "id": "REPLACE_ME",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -19808,
+        -7552
+      ],
+      "id": "REPLACE_ME",
+      "name": "Groq Chat Model3",
+      "credentials": {
+        "REPLACE_WITH_YOUR_CREDENTIALS": true
+      }
+    },
+    {
+      "parameters": {
+        "path": "b266df05-d492-4ee7-8e8a-941f5596f82c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -19552,
+        -7264
+      ],
+      "id": "REPLACE_ME",
+      "name": "Webhook1",
+      "webhookId": "REPLACE_ME"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -19808,
+        -7376
+      ],
+      "id": "REPLACE_ME",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "Bk1sSfmPIK5oVsZv",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/Bk1sSfmPIK5oVsZv",
+          "cachedResultName": "Patientt Registration"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -21904,
+        -7792
+      ],
+      "id": "REPLACE_ME",
+      "name": "Call 'Patientt Registration'"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Audio Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Analyzing Image Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Audio URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "PrepareInput",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response": {
+      "main": [
+        [
+          {
+            "node": "Generate Audio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Text Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If PDF File": {
+      "main": [
+        [
+          {
+            "node": "Extract from PDF File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Prompt": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Prompt": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Document": {
+      "main": [
+        [
+          {
+            "node": "Download Document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PrepareInput": {
+      "main": [
+        [
+          {
+            "node": "Text Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Image": {
+      "main": [
+        [
+          {
+            "node": "Image Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audio URL": {
+      "main": [
+        [
+          {
+            "node": "Download Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image URL": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Audio": {
+      "main": [
+        [
+          {
+            "node": "Transcribe Audio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Analyze Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Audio": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Audio": {
+      "main": [
+        [
+          {
+            "node": "Audio Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Document": {
+      "main": [
+        [
+          {
+            "node": "If PDF File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyzing Image Text": {
+      "main": [
+        [
+          {
+            "node": "Get Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from PDF File": {
+      "main": [
+        [
+          {
+            "node": "Document Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio Response": {
+      "main": [
+        []
+      ]
+    },
+    "Text Message": {
+      "main": [
+        []
+      ]
+    },
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Appointment Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'HomeHealthCareService'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Receptionist Agent'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Receptionist Agnet (RAG)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store1",
+            "type": "ai_embedding",
+            "index": 0
+          },
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Receptionist Agnet (RAG)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Receptionist Agnet (RAG)",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receptionist Agnet (RAG)": {
+      "main": [
+        []
+      ]
+    },
+    "registration sheet": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an Appointment": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check The Appointment Slot": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel the Appointmnet": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Appointment Booking Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HHC Info": {
+      "ai_tool": [
+        [
+          {
+            "node": "HomeHealthCare",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "HomeHealthCare",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "HomeHealthCare",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Patientt Registration'": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v0",
+    "availableInMCP": true
+  },
+  "versionId": "224d3a2f-31e2-4470-86df-a7a91f78e356",
+  "meta": {
+    "templateId": "ready-to-run-ai-workflow",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c03019462cd8927f4cbc144c51c921184f9b6a831f88b782f653f85209b97680"
+  },
+  "id": "REPLACE_ME",
+  "tags": []
+}
